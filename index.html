@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Meeting Summary Bot</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Header -->
+    <div class="header">
+      <h1>🎙️ Meeting Summary Bot</h1>
+      <p>Record or upload your meeting · Get AI summary · Email to team</p>
+    </div>
+
+    <!-- Input Fields -->
+    <div class="card">
+      <label>📝 Meeting Title</label>
+      <input type="text" id="meetingTitle" placeholder="e.g. Sprint Review – July 2025" />
+
+      <label>📧 Send Summary To (comma separated)</label>
+      <input type="text" id="recipients" placeholder="e.g. alice@co.com, bob@co.com" />
+    </div>
+
+    <!-- Mode Tabs -->
+    <div class="tabs">
+      <button class="tab active" id="tabLive" onclick="switchTab('live')">🔴 Live Recording</button>
+      <button class="tab" id="tabUpload" onclick="switchTab('upload')">📂 Upload File</button>
+    </div>
+
+    <!-- Live Recording Panel -->
+    <div class="card" id="panelLive">
+      <p class="hint">Uses your screen + system audio — works perfectly with 🎧 headphones on Chrome/Windows</p>
+      <div class="btn-row">
+        <button class="btn btn-record" id="btnStart" onclick="startRecording()">▶️ Start Recording</button>
+        <button class="btn btn-stop" id="btnStop" onclick="stopRecording()" disabled>⏹️ Stop & Summarize</button>
+      </div>
+      <div class="timer" id="timer">00:00:00</div>
+    </div>
+
+    <!-- Upload Panel -->
+    <div class="card hidden" id="panelUpload">
+      <p class="hint">Upload a recorded meeting file (.mp3, .mp4, .wav, .webm)</p>
+      <input type="file" id="uploadFile" accept=".mp3,.mp4,.wav,.webm,.m4a" />
+      <button class="btn btn-primary" onclick="uploadAndSummarize()">📤 Upload & Summarize</button>
+    </div>
+
+    <!-- Status -->
+    <div class="status-box" id="statusBox" style="display:none">
+      <div class="spinner"></div>
+      <span id="statusText">Processing...</span>
+    </div>
+
+    <!-- Results -->
+    <div class="card result-card hidden" id="resultCard">
+      <h2>📋 Meeting Summary</h2>
+
+      <div class="section">
+        <h3>🧾 Overview</h3>
+        <p id="resSummary"></p>
+        <span class="badge" id="resSentimentBadge"></span>
+        <span id="resSentimentNote" class="sentiment-note"></span>
+      </div>
+
+      <div class="section">
+        <h3>🔑 Key Points</h3>
+        <ul id="resKeyPoints"></ul>
+      </div>
+
+      <div class="section">
+        <h3>✅ Action Items</h3>
+        <table id="resActionTable">
+          <thead>
+            <tr><th>Task</th><th>Owner</th><th>Deadline</th></tr>
+          </thead>
+          <tbody id="resActionBody"></tbody>
+        </table>
+      </div>
+
+      <div class="email-status" id="emailStatus"></div>
+    </div>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
