@@ -1,0 +1,57 @@
+# ── Environment Variables (NEVER commit these) ──
+.env
+*.env
+.env.*
+
+# ── Python ──────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+parts/
+var/
+sdist/
+wheels/
+pip-wheel-metadata/
+
+# ── Virtual Environment ──────────────────────────
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# ── Whisper Model Cache ──────────────────────────
+# (Whisper downloads model files locally — don't commit them)
+~/.cache/whisper/
+*.pt
+
+# ── Temp Audio Files ─────────────────────────────
+*.webm
+*.wav
+*.mp3
+*.mp4
+*.m4a
+tmp/
+temp/
+
+# ── OS Files ─────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── VS Code / Editor ──────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Logs ─────────────────────────────────────────
+*.log
+logs/
