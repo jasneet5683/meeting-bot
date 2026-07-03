@@ -1,4 +1,5 @@
 import os
+import requests
 import whisper
 import tempfile
 import smtplib
@@ -7,7 +8,6 @@ from flask_cors import CORS
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
-import requests
 import traceback
 
 
@@ -141,33 +141,98 @@ Provide your response in the following JSON format ONLY (no extra text):
 # ── 3. Send Email ─────────────────────────────────────────────────────────────
 @app.route("/send-email", methods=["POST"])
 def send_email():
-    data        = request.get_json()
-    recipients  = data.get("recipients", [])
-    summary     = data.get("summary", {})
-    meeting_title = data.get("meeting_title", "Meeting Summary")
-    transcript  = data.get("transcript", "")
-
-    if not recipients:
-        return jsonify({"error": "No recipients provided"}), 400
-
-    html = build_html_email(meeting_title, summary, transcript)
-
     try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = f"📋 Meeting Summary — {meeting_title}"
-        msg["From"]    = f"{SENDER_NAME} <{SENDER_EMAIL}>"
-        msg["To"]      = ", ".join(recipients)
-        msg.attach(MIMEText(html, "html"))
+        data         = request.json
+        recipients   = data.get("recipients", [])
+        meeting_title = data.get("meeting_title", "Meeting Summary")
+        summary      = data.get("summary", {})
+        transcript   = data.get("transcript", "")
 
-        with smtplib.SMTP("smtp-relay.brevo.com", 587) as server:
-            server.starttls()
-            server.login(BREVO_SMTP_USER, BREVO_SMTP_PASS)
-            server.sendmail(SENDER_EMAIL, recipients, msg.as_string())
+        if not recipients:
+            return jsonify({"error": "No recipients provided"}), 400
 
-        print(f"📧 Email sent to: {recipients}")
-        return jsonify({"success": True, "sent_to": recipients})
+        # ── Build HTML Email Body ──────────────────────────────────────────
+        key_points_html = "".join(
+            f"<li>{p}</li>" for p in summary.get("key_points", [])
+        )
+        action_rows_html = "".join(
+            f"""<tr>
+                  <td style='padding:8px;border:1px solid #e5e7eb'>{a.get('task','')}</td>
+                  <td style='padding:8px;border:1px solid #e5e7eb'>{a.get('owner','TBD')}</td>
+                  <td style='padding:8px;border:1px solid #e5e7eb'>{a.get('deadline','TBD')}</td>
+                </tr>"""
+            for a in summary.get("action_items", [])
+        )
+
+        sentiment       = summary.get("sentiment", "Neutral")
+        sentiment_colors = {
+            "Positive": "#22c55e",
+            "Neutral":  "#64748b",
+            "Mixed":    "#f59e0b",
+            "Negative": "#ef4444"
+        }
+        sentiment_color = sentiment_colors.get(sentiment, "#64748b")
+
+        html_body = f"""
+        <div style="font-family:Arial,sans-serif;max-width:700px;margin:auto;padding:24px;background:#f9fafb;border-radius:12px">
+          <h1 style="color:#1e3a5f;border-bottom:3px solid #2563eb;padding-bottom:12px">
+            🎙️ {meeting_title} — Meeting Summary
+          </h1>
+
+          <h2 style="color:#374151">🧾 Overview</h2>
+          <p style="color:#4b5563;line-height:1.7">{summary.get("summary","")}</p>
+          <span style="background:{sentiment_color};color:white;padding:4px 12px;border-radius:20px;font-size:13px">
+            {sentiment}
+          </span>
+          <p style="color:#6b7280;font-size:13px;margin-top:8px">{summary.get("sentiment_note","")}</p>
+
+          <h2 style="color:#374151;margin-top:28px">🔑 Key Points</h2>
+          <ul style="color:#4b5563;line-height:1.9">{key_points_html}</ul>
+
+          <h2 style="color:#374151;margin-top:28px">✅ Action Items</h2>
+          <table style="width:100%;border-collapse:collapse;font-size:14px">
+            <thead>
+              <tr style="background:#2563eb;color:white">
+                <th style="padding:10px;text-align:left">Task</th>
+                <th style="padding:10px;text-align:left">Owner</th>
+                <th style="padding:10px;text-align:left">Deadline</th>
+              </tr>
+            </thead>
+            <tbody>{action_rows_html}</tbody>
+          </table>
+
+          <p style="margin-top:32px;font-size:12px;color:#9ca3af;text-align:center">
+            Sent by Meeting Summary Bot · Powered by Whisper + AI
+          </p>
+        </div>
+        """
+
+        # ── Send via Brevo HTTP API (port 443 ✅) ─────────────────────────
+        brevo_url = "https://api.brevo.com/v3/smtp/email"
+        headers = {
+            "accept":       "application/json",
+            "content-type": "application/json",
+            "api-key":      os.environ.get("BREVO_API_KEY")
+        }
+
+        to_list = [{"email": r} for r in recipients]
+
+        payload = {
+            "sender":      {"name": "Meeting Bot", "email": os.environ.get("BREVO_SENDER_EMAIL")},
+            "to":          to_list,
+            "subject":     f"📋 Meeting Summary: {meeting_title}",
+            "htmlContent": html_body
+        }
+
+        response = requests.post(brevo_url, json=payload, headers=headers, timeout=15)
+
+        if response.status_code in (200, 201):
+            return jsonify({"message": "Email sent successfully!"})
+        else:
+            return jsonify({"error": f"Brevo error: {response.text}"}), 500
 
     except Exception as e:
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
 
