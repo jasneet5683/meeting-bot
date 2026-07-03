@@ -64,14 +64,25 @@ def transcribe():
 # ── 2. Summarize ─────────────────────────────────────────────────────────────
 @app.route("/summarize", methods=["POST"])
 def summarize():
-    data = request.get_json()
-    transcript = data.get("transcript", "").strip()
-    meeting_title = data.get("meeting_title", "Meeting")
+    try:
+        print("=== /summarize called ===")
 
-    if not transcript:
-        return jsonify({"error": "No transcript provided"}), 400
+        data = request.get_json(force=True, silent=True)
+        print("Received data:", data)
 
-    prompt = f"""
+        if not data:
+            return jsonify({"error": "Invalid or missing JSON body"}), 400
+
+        transcript = data.get("transcript", "").strip()
+        meeting_title = data.get("meeting_title", "Meeting")
+
+        if not transcript:
+            return jsonify({"error": "No transcript provided"}), 400
+
+        print("Transcript length:", len(transcript))
+        print("Meeting title:", meeting_title)
+
+        prompt = f"""
 You are an expert meeting analyst. Analyze the following meeting transcript and provide a structured summary.
 
 Meeting Title: {meeting_title}
@@ -91,7 +102,7 @@ Provide your response in the following JSON format ONLY (no extra text):
 }}
 """
 
-    try:
+        print("Calling OpenRouter API...")
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
@@ -107,13 +118,11 @@ Provide your response in the following JSON format ONLY (no extra text):
             }
         )
 
-        # ── DEBUG: print full OpenRouter response ──
         print("OpenRouter status:", response.status_code)
         print("OpenRouter response:", response.text)
 
         result = response.json()
 
-        # ── Check for API-level error ──
         if "error" in result:
             print("OpenRouter API error:", result["error"])
             return jsonify({"error": result["error"]}), 500
@@ -128,8 +137,6 @@ Provide your response in the following JSON format ONLY (no extra text):
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
-
-
 
 # ── 3. Send Email ─────────────────────────────────────────────────────────────
 @app.route("/send-email", methods=["POST"])
