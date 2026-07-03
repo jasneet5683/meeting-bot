@@ -5,18 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Meeting Summary Bot</title>
   <link rel="stylesheet" href="style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 </head>
 <body>
+
+  <!-- Animated background blobs -->
+  <div class="bg-blob blob1"></div>
+  <div class="bg-blob blob2"></div>
+  <div class="bg-blob blob3"></div>
 
   <div class="container">
 
     <!-- Header -->
     <div class="header">
-      <h1>🎙️ Meeting Summary Agent</h1>
-      <p>Record or upload your meeting · Get AI summary · Email to team</p>
+      <div class="header-icon">🎙️</div>
+      <h1>Meeting Summary <span class="gradient-text">Agent</span></h1>
+      <p>Record or upload your meeting &nbsp;·&nbsp; Get AI summary &nbsp;·&nbsp; Email to team</p>
+      <div class="header-pills">
+        <span class="pill">⚡ AI Powered</span>
+        <span class="pill">🌐 Auto Language</span>
+        <span class="pill">📧 Email Ready</span>
+      </div>
     </div>
 
-    <!-- Input Fields -->
+    <!-- Meeting Title -->
     <div class="card">
       <label>📝 Meeting Title</label>
       <input type="text" id="meetingTitle" placeholder="e.g. Sprint Review – July 2025" />
@@ -24,24 +36,42 @@
 
     <!-- Mode Tabs -->
     <div class="tabs">
-      <button class="tab active" id="tabLive" onclick="switchTab('live')">🔴 Live Recording</button>
-      <button class="tab" id="tabUpload" onclick="switchTab('upload')">📂 Upload File</button>
+      <button class="tab active" id="tabLive" onclick="switchTab('live')">
+        <span class="tab-icon">🔴</span> Live Recording
+      </button>
+      <button class="tab" id="tabUpload" onclick="switchTab('upload')">
+        <span class="tab-icon">📂</span> Upload File
+      </button>
     </div>
 
     <!-- Live Recording Panel -->
     <div class="card" id="panelLive">
-      <p class="hint">Uses your screen + system audio — works perfectly with 🎧 headphones on Chrome/Windows</p>
+      <p class="hint">💡 Uses screen + system audio — works best with 🎧 headphones on Chrome/Windows</p>
       <div class="btn-row">
-        <button class="btn btn-record" id="btnStart" onclick="startRecording()">▶️ Start Recording</button>
-        <button class="btn btn-stop" id="btnStop" onclick="stopRecording()" disabled>⏹️ Stop & Summarize</button>
+        <button class="btn btn-record" id="btnStart" onclick="startRecording()">
+          <span class="btn-icon">▶️</span> Start Recording
+        </button>
+        <button class="btn btn-stop" id="btnStop" onclick="stopRecording()" disabled>
+          <span class="btn-icon">⏹️</span> Stop & Summarize
+        </button>
       </div>
-      <div class="timer" id="timer">00:00:00</div>
+      <div class="timer-wrapper">
+        <div class="timer-dot" id="timerDot"></div>
+        <div class="timer" id="timer">00:00:00</div>
+      </div>
     </div>
 
     <!-- Upload Panel -->
     <div class="card hidden" id="panelUpload">
-      <p class="hint">Upload a recorded meeting file (.mp3, .mp4, .wav, .webm)</p>
-      <input type="file" id="uploadFile" accept=".mp3,.mp4,.wav,.webm,.m4a" />
+      <p class="hint">📁 Upload a recorded meeting file (.mp3, .mp4, .wav, .webm, .m4a)</p>
+      <div class="upload-zone" onclick="document.getElementById('uploadFile').click()">
+        <div class="upload-icon">☁️</div>
+        <p class="upload-text">Click to browse or drag & drop</p>
+        <p class="upload-sub">Supported: MP3, MP4, WAV, WEBM, M4A</p>
+        <input type="file" id="uploadFile" accept=".mp3,.mp4,.wav,.webm,.m4a"
+               style="display:none" onchange="updateUploadLabel(this)"/>
+      </div>
+      <div class="upload-filename" id="uploadFilename"></div>
       <button class="btn btn-primary" onclick="uploadAndSummarize()">📤 Upload & Summarize</button>
     </div>
 
@@ -53,44 +83,67 @@
 
     <!-- Results -->
     <div class="card result-card hidden" id="resultCard">
-      <h2>📋 Meeting Summary</h2>
 
-      <div class="section">
-        <h3>🧾 Overview</h3>
-        <p id="resSummary"></p>
-        <span class="badge" id="resSentimentBadge"></span>
-        <span id="resSentimentNote" class="sentiment-note"></span>
+      <div class="result-header">
+        <h2>📋 Meeting Summary</h2>
+        <span class="result-badge">AI Generated</span>
       </div>
 
+      <!-- Overview -->
       <div class="section">
-        <h3>🔑 Key Points</h3>
+        <h3><span class="section-icon">🧾</span> Overview</h3>
+        <p id="resSummary"></p>
+        <div class="sentiment-row">
+          <span class="badge" id="resSentimentBadge"></span>
+          <span id="resSentimentNote" class="sentiment-note"></span>
+        </div>
+      </div>
+
+      <!-- Key Points -->
+      <div class="section">
+        <h3><span class="section-icon">🔑</span> Key Points</h3>
         <ul id="resKeyPoints"></ul>
       </div>
 
+      <!-- Action Items -->
       <div class="section">
-        <h3>✅ Action Items</h3>
-        <table id="resActionTable">
-          <thead>
-            <tr><th>Task</th><th>Owner</th><th>Deadline</th></tr>
-          </thead>
-          <tbody id="resActionBody"></tbody>
-        </table>
+        <h3><span class="section-icon">✅</span> Action Items</h3>
+        <div class="table-wrapper">
+          <table id="resActionTable">
+            <thead>
+              <tr><th>Task</th><th>Owner</th><th>Deadline</th></tr>
+            </thead>
+            <tbody id="resActionBody"></tbody>
+          </table>
+        </div>
       </div>
 
-      <!-- ✅ Email Section — appears after summary -->
+      <!-- Email Section -->
       <div class="section email-section">
-        <h3>📧 Send Summary via Email</h3>
+        <h3><span class="section-icon">📧</span> Send Summary via Email</h3>
         <div class="email-row">
-          <input
-            type="text"
-            id="recipients"
-            placeholder="e.g. alice@co.com, bob@co.com"
-          />
-          <button class="btn btn-email" onclick="sendEmail()">📤 Send Email</button>
+          <input type="text" id="recipients" placeholder="e.g. alice@co.com, bob@co.com" />
+          <button class="btn btn-email" onclick="sendEmail()">📤 Send</button>
         </div>
         <div class="email-status" id="emailStatus"></div>
       </div>
 
+    </div>
+
+    <!-- History Panel -->
+    <div class="card history-panel">
+      <div class="history-header">
+        <h3>🕐 Recent Summaries</h3>
+        <button class="btn-refresh" onclick="loadHistory()">🔄 Refresh</button>
+      </div>
+      <div id="historyList">
+        <p class="history-empty">Click Refresh to load saved summaries.</p>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <p>Built with ❤️ · Powered by Whisper + OpenRouter + Brevo</p>
     </div>
 
   </div>
