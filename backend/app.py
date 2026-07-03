@@ -53,6 +53,7 @@ def transcribe():
             "language": detected_lang
         })
     except Exception as e:
+        traceback.print_exc()  # ← this prints full error in Railway logs
         return jsonify({"error": str(e)}), 500
     finally:
         os.remove(tmp_path)
