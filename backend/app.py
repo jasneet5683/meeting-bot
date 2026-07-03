@@ -91,7 +91,7 @@ Provide your response in the following JSON format ONLY (no extra text):
 }}
 """
 
-        try:
+    try:
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
