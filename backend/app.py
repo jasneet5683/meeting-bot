@@ -91,7 +91,7 @@ Provide your response in the following JSON format ONLY (no extra text):
 }}
 """
 
-    try:
+        try:
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
@@ -101,21 +101,34 @@ Provide your response in the following JSON format ONLY (no extra text):
                 "X-Title": "Meeting Summary Bot"
             },
             json={
-                "model": "google/gemma-4-31b-it:free",
+                "model": "google/gemma-3-27b-it:free",
                 "messages": [{"role": "user", "content": prompt}],
                 "response_format": {"type": "json_object"}
             }
         )
 
+        # ── DEBUG: print full OpenRouter response ──
+        print("OpenRouter status:", response.status_code)
+        print("OpenRouter response:", response.text)
+
         result = response.json()
+
+        # ── Check for API-level error ──
+        if "error" in result:
+            print("OpenRouter API error:", result["error"])
+            return jsonify({"error": result["error"]}), 500
+
         content = result["choices"][0]["message"]["content"]
+        print("Raw content:", content)
 
         import json
         summary_data = json.loads(content)
         return jsonify(summary_data)
 
     except Exception as e:
+        traceback.print_exc()
         return jsonify({"error": str(e)}), 500
+
 
 
 # ── 3. Send Email ─────────────────────────────────────────────────────────────
