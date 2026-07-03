@@ -1,9 +1,11 @@
-const BACKEND = "https://web-production-b8ca4.up.railway.app"; // 🔁 Replace with your Railway URL
+const BACKEND = "https://web-production-b8ca4.up.railway.app";
 
-let mediaRecorder = null;
-let audioChunks   = [];
-let timerInterval = null;
-let seconds       = 0;
+let mediaRecorder  = null;
+let audioChunks    = [];
+let timerInterval  = null;
+let seconds        = 0;
+let lastSummary    = {};
+let lastTranscript = "";
 
 // ── Tab Switch ────────────────────────────────────────────────────────────────
 function switchTab(tab) {
@@ -79,23 +81,24 @@ async function uploadAndSummarize() {
   await processAudio(file, file.name);
 }
 
-// ── Core Pipeline ─────────────────────────────────────────────────────────────
+// ── Core Pipeline (Transcribe + Summarize only) ───────────────────────────────
 async function processAudio(blob, filename) {
-  const title      = document.getElementById("meetingTitle").value.trim() || "Meeting";
-  const recipInput = document.getElementById("recipients").value.trim();
-  const recipients = recipInput.split(",").map(e => e.trim()).filter(Boolean);
+  const title = document.getElementById("meetingTitle").value.trim() || "Meeting";
+
+  // Reset email status
+  document.getElementById("emailStatus").textContent = "";
+  document.getElementById("recipients").value = "";
 
   // Step 1 — Transcribe
   setStatus("🎙️ Transcribing audio with Whisper...", true);
   const formData = new FormData();
   formData.append("audio", blob, filename);
 
-  let transcript = "";
   try {
     const res  = await fetch(`${BACKEND}/transcribe`, { method: "POST", body: formData });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-    transcript = data.transcript;
+    lastTranscript = data.transcript;
     setStatus(`✅ Transcription done (Language: ${data.language}). Generating summary...`, true);
   } catch (err) {
     setStatus(`❌ Transcription failed: ${err.message}`, false);
@@ -103,42 +106,65 @@ async function processAudio(blob, filename) {
   }
 
   // Step 2 — Summarize
-  let summary = {};
   try {
     const res  = await fetch(`${BACKEND}/summarize`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ transcript, meeting_title: title })
+      body: JSON.stringify({ transcript: lastTranscript, meeting_title: title })
     });
     const data = await res.json();
     if (data.error) throw new Error(data.error);
-    summary = data;
-    displayResults(summary);
-    setStatus("✅ Summary ready! Sending email...", true);
+    lastSummary = data;
+    displayResults(lastSummary);
+    setStatus("✅ Summary ready!", true);
+    setTimeout(hideStatus, 2000); // ✅ hide after 2 sec
   } catch (err) {
     setStatus(`❌ Summarization failed: ${err.message}`, false);
     return;
   }
+}
 
-  // Step 3 — Email
-  if (recipients.length > 0) {
-    try {
-      const res  = await fetch(`${BACKEND}/send-email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipients, summary, meeting_title: title, transcript })
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      document.getElementById("emailStatus").textContent = `📧 Email sent to: ${recipients.join(", ")}`;
-      document.getElementById("emailStatus").style.color = "#22c55e";
-    } catch (err) {
-      document.getElementById("emailStatus").textContent = `⚠️ Email failed: ${err.message}`;
-      document.getElementById("emailStatus").style.color = "#ef4444";
-    }
+// ── Send Email (manual button) ────────────────────────────────────────────────
+async function sendEmail() {
+  const title      = document.getElementById("meetingTitle").value.trim() || "Meeting";
+  const recipInput = document.getElementById("recipients").value.trim();
+  const recipients = recipInput.split(",").map(e => e.trim()).filter(Boolean);
+  const statusEl   = document.getElementById("emailStatus");
+
+  if (!recipients.length) {
+    statusEl.textContent = "⚠️ Please enter at least one recipient email.";
+    statusEl.style.color = "#f59e0b";
+    return;
   }
 
-  hideStatus();
+  if (!lastSummary || !Object.keys(lastSummary).length) {
+    statusEl.textContent = "⚠️ No summary available. Please summarize a meeting first.";
+    statusEl.style.color = "#f59e0b";
+    return;
+  }
+
+  statusEl.textContent = "📤 Sending email...";
+  statusEl.style.color = "#2563eb";
+
+  try {
+    const res  = await fetch(`${BACKEND}/send-email`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recipients,
+        summary: lastSummary,
+        meeting_title: title,
+        transcript: lastTranscript
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    statusEl.textContent = `✅ Email sent to: ${recipients.join(", ")}`;
+    statusEl.style.color = "#22c55e";
+  } catch (err) {
+    statusEl.textContent = `❌ Email failed: ${err.message}`;
+    statusEl.style.color = "#ef4444";
+  }
 }
 
 // ── Display Results ───────────────────────────────────────────────────────────
@@ -176,3 +202,7 @@ function setStatus(msg, show) {
 function hideStatus() {
   document.getElementById("statusBox").style.display = "none";
 }
+
+
+
+
