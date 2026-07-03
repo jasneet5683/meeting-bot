@@ -1,4 +1,4 @@
-const BACKEND = "https://your-railway-url.up.railway.app"; // 🔁 Replace with your Railway URL
+const BACKEND = "https://web-production-b8ca4.up.railway.app"; // 🔁 Replace with your Railway URL
 
 let mediaRecorder = null;
 let audioChunks   = [];
