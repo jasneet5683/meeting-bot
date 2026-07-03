@@ -112,7 +112,7 @@ Provide your response in the following JSON format ONLY (no extra text):
                 "X-Title": "Meeting Summary Bot"
             },
             json={
-                "model": "mistralai/mistral-7b-instruct:free",
+                "model": "openrouter/free",
                 "messages": [{"role": "user", "content": prompt}],
                 "response_format": {"type": "json_object"}
             }
