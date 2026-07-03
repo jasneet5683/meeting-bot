@@ -12,7 +12,7 @@
 
     <!-- Header -->
     <div class="header">
-      <h1>🎙️ Meeting Summary Bot</h1>
+      <h1>🎙️ Meeting Summary Agent</h1>
       <p>Record or upload your meeting · Get AI summary · Email to team</p>
     </div>
 
@@ -20,9 +20,6 @@
     <div class="card">
       <label>📝 Meeting Title</label>
       <input type="text" id="meetingTitle" placeholder="e.g. Sprint Review – July 2025" />
-
-      <label>📧 Send Summary To (comma separated)</label>
-      <input type="text" id="recipients" placeholder="e.g. alice@co.com, bob@co.com" />
     </div>
 
     <!-- Mode Tabs -->
@@ -80,7 +77,20 @@
         </table>
       </div>
 
-      <div class="email-status" id="emailStatus"></div>
+      <!-- ✅ Email Section — appears after summary -->
+      <div class="section email-section">
+        <h3>📧 Send Summary via Email</h3>
+        <div class="email-row">
+          <input
+            type="text"
+            id="recipients"
+            placeholder="e.g. alice@co.com, bob@co.com"
+          />
+          <button class="btn btn-email" onclick="sendEmail()">📤 Send Email</button>
+        </div>
+        <div class="email-status" id="emailStatus"></div>
+      </div>
+
     </div>
 
   </div>
