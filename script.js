@@ -6,6 +6,7 @@ let timerInterval  = null;
 let seconds        = 0;
 let lastSummary    = {};
 let lastTranscript = "";
+let audioContext   = null; // ✅ track AudioContext for cleanup
 
 // ── Tab Switch ────────────────────────────────────────────────────────────────
 function switchTab(tab) {
@@ -34,23 +35,74 @@ function stopTimer() {
 // ── Live Recording ────────────────────────────────────────────────────────────
 async function startRecording() {
   try {
-    const stream = await navigator.mediaDevices.getDisplayMedia({
+
+    // Step 1 — Capture screen + system/tab audio
+    const screenStream = await navigator.mediaDevices.getDisplayMedia({
       video: true,
-      audio: true
+      audio: true  // system audio (tick "Share audio" in Chrome dialog)
     });
 
-    audioChunks = [];
-    mediaRecorder = new MediaRecorder(stream, { mimeType: "video/webm" });
+    // Step 2 — Capture microphone audio (optional, won't block if denied)
+    let micStream = null;
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    } catch (e) {
+      console.warn("⚠️ Mic not available — using screen/system audio only.", e);
+    }
+
+    // Step 3 — Mix screen audio + mic audio via Web Audio API
+    audioContext        = new AudioContext();
+    const destination  = audioContext.createMediaStreamDestination();
+
+    const screenAudioTracks = screenStream.getAudioTracks();
+    if (screenAudioTracks.length > 0) {
+      const screenSource = audioContext.createMediaStreamSource(
+        new MediaStream(screenAudioTracks)
+      );
+      screenSource.connect(destination);
+    } else {
+      console.warn("⚠️ No system audio track found. Make sure 'Share audio' was ticked.");
+    }
+
+    if (micStream && micStream.getAudioTracks().length > 0) {
+      const micSource = audioContext.createMediaStreamSource(micStream);
+      micSource.connect(destination);
+    }
+
+    // Step 4 — Record AUDIO ONLY stream (ffmpeg can process this cleanly)
+    const audioOnlyStream = destination.stream;
+
+    // Pick best supported audio MIME type
+    const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+      ? "audio/webm;codecs=opus"
+      : MediaRecorder.isTypeSupported("audio/webm")
+      ? "audio/webm"
+      : "audio/ogg";
+
+    audioChunks   = [];
+    mediaRecorder = new MediaRecorder(audioOnlyStream, { mimeType });
 
     mediaRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) audioChunks.push(e.data);
     };
 
     mediaRecorder.onstop = async () => {
-      stream.getTracks().forEach(t => t.stop());
-      const blob = new Blob(audioChunks, { type: "video/webm" });
-      await processAudio(blob, "recording.webm");
+      // Cleanup all tracks and audio context
+      screenStream.getTracks().forEach(t => t.stop());
+      if (micStream) micStream.getTracks().forEach(t => t.stop());
+      if (audioContext) { audioContext.close(); audioContext = null; }
+
+      const blob = new Blob(audioChunks, { type: mimeType });
+      const ext  = mimeType.includes("ogg") ? "ogg" : "webm";
+      await processAudio(blob, `recording.${ext}`);
     };
+
+    // Stop recording automatically if user closes screen share dialog
+    screenStream.getVideoTracks()[0].addEventListener("ended", () => {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        stopRecording();
+      }
+    });
 
     mediaRecorder.start(1000);
     startTimer();
@@ -60,8 +112,14 @@ async function startRecording() {
     setStatus("🔴 Recording in progress...", true);
 
   } catch (err) {
-    alert("❌ Could not start recording. Please allow screen sharing and ensure 'Share audio' is ticked.");
     console.error(err);
+    alert(
+      "❌ Could not start recording.\n\n" +
+      "Please ensure:\n" +
+      "1️⃣ You click 'Allow' for screen sharing\n" +
+      "2️⃣ You tick 'Share audio' checkbox in Chrome\n" +
+      "3️⃣ You are using Chrome on Windows/Mac"
+    );
   }
 }
 
@@ -71,6 +129,7 @@ function stopRecording() {
     stopTimer();
     document.getElementById("btnStart").disabled = false;
     document.getElementById("btnStop").disabled  = true;
+    setStatus("⏳ Processing your recording...", true);
   }
 }
 
@@ -117,7 +176,7 @@ async function processAudio(blob, filename) {
     lastSummary = data;
     displayResults(lastSummary);
     setStatus("✅ Summary ready!", true);
-    setTimeout(hideStatus, 2000); // ✅ hide after 2 sec
+    setTimeout(hideStatus, 2000);
   } catch (err) {
     setStatus(`❌ Summarization failed: ${err.message}`, false);
     return;
@@ -199,10 +258,7 @@ function setStatus(msg, show) {
   document.getElementById("statusText").textContent = msg;
   box.style.display = show ? "flex" : "none";
 }
+
 function hideStatus() {
   document.getElementById("statusBox").style.display = "none";
 }
-
-
-
-
