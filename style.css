@@ -153,3 +153,48 @@ td { padding: 9px 10px; border: 1px solid #e2e8f0; color: #374151; }
 
 .email-status { margin-top: 16px; font-size: 14px; font-weight: 600; }
 .hidden { display: none !important; }
+
+/* Email Section */
+.email-section {
+  margin-top: 24px;
+  border-top: 2px solid #e5e7eb;
+  padding-top: 20px;
+}
+
+.email-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.email-row input {
+  flex: 1;
+  min-width: 200px;
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.btn-email {
+  background: #2563eb;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.btn-email:hover {
+  background: #1d4ed8;
+}
+
+.email-status {
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 500;
+}
