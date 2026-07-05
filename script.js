@@ -109,6 +109,7 @@ async function startRecording() {
 
     document.getElementById("btnStart").disabled = true;
     document.getElementById("btnStop").disabled  = false;
+    document.getElementById("timerDot").classList.add("active");
     setStatus("🔴 Recording in progress...", true);
 
   } catch (err) {
@@ -129,6 +130,7 @@ function stopRecording() {
     stopTimer();
     document.getElementById("btnStart").disabled = false;
     document.getElementById("btnStop").disabled  = true;
+    document.getElementById("timerDot").classList.remove("active");
     setStatus("⏳ Processing your recording...", true);
   }
 }
@@ -261,4 +263,11 @@ function setStatus(msg, show) {
 
 function hideStatus() {
   document.getElementById("statusBox").style.display = "none";
+}
+
+function updateUploadLabel(input) {
+  const label = document.getElementById("uploadFilename");
+  if (input.files && input.files[0]) {
+    label.textContent = "📎 " + input.files[0].name;
+  }
 }
