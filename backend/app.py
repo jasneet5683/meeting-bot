@@ -9,11 +9,14 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from dotenv import load_dotenv
 import traceback
+from summary_store import store_bp          # ← Line 1: import blueprint
+
 
 
 load_dotenv()
 
 app = Flask(__name__)
+app.register_blueprint(store_bp)            # ← Line 2: register routes
 CORS(app, resources={r"/*": {"origins": [
     "https://jasneet5683.github.io",
     "http://localhost:3000",
