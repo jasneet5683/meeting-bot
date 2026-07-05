@@ -178,6 +178,7 @@ async function processAudio(blob, filename) {
     lastSummary = data;
     displayResults(lastSummary);
     setStatus("✅ Summary ready!", true);
+    await saveSummary();            // ✅ auto-save to Railway
     setTimeout(hideStatus, 2000);
   } catch (err) {
     setStatus(`❌ Summarization failed: ${err.message}`, false);
@@ -263,6 +264,71 @@ function setStatus(msg, show) {
 
 function hideStatus() {
   document.getElementById("statusBox").style.display = "none";
+}
+
+// ── Save Summary to Railway ───────────────────────────────────────────────────
+async function saveSummary() {
+  const title = document.getElementById("meetingTitle").value.trim() || "Meeting";
+  try {
+    const res  = await fetch(`${BACKEND}/save-summary`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        meeting_title: title,
+        summary:       lastSummary,
+        transcript:    lastTranscript
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    console.log(`✅ Summary saved. Total on server: ${data.total_saved}`);
+  } catch (err) {
+    console.warn("⚠️ Could not save summary:", err.message);
+  }
+}
+
+// ── Load Saved Summaries ──────────────────────────────────────────────────────
+async function loadHistory() {
+  try {
+    const res       = await fetch(`${BACKEND}/get-summaries`);
+    const summaries = await res.json();
+    const container = document.getElementById("historyList");
+
+    if (!summaries.length) {
+      container.innerHTML = "<p style='color:#64748b'>No saved summaries yet.</p>";
+      return;
+    }
+
+    container.innerHTML = summaries.reverse().map((s, i) => `
+      <div class="history-card" onclick="loadFromHistory(${summaries.length - 1 - i})">
+        <div class="history-title">📋 ${s.meeting_title}</div>
+        <div class="history-date">🕐 ${s.saved_at}</div>
+        <div class="history-preview">${(s.summary?.summary || "").slice(0, 100)}...</div>
+      </div>
+    `).join("");
+
+  } catch (err) {
+    console.warn("⚠️ Could not load history:", err.message);
+  }
+}
+
+// ── Load a Specific Summary from History ─────────────────────────────────────
+async function loadFromHistory(index) {
+  try {
+    const res       = await fetch(`${BACKEND}/get-summaries`);
+    const summaries = await res.json();
+    const entry     = summaries[index];
+    if (!entry) return;
+
+    lastSummary    = entry.summary;
+    lastTranscript = entry.transcript;
+    document.getElementById("meetingTitle").value = entry.meeting_title;
+    displayResults(lastSummary);
+    setStatus(`📂 Loaded: ${entry.meeting_title}`, true);
+    setTimeout(hideStatus, 2000);
+  } catch (err) {
+    console.warn("⚠️ Could not load from history:", err.message);
+  }
 }
 
 function updateUploadLabel(input) {
