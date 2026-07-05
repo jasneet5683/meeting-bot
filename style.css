@@ -574,3 +574,153 @@ tr:hover td { background: rgba(255,255,255,0.03); }
 
 /* ── Utility ──────────────────────────────────────────────── */
 .hidden { display: none !important; }
+
+/* ── Background Decorative SVG Icons ─────────────────────── */
+.bg-deco {
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.06;
+  animation: decoFloat 10s ease-in-out infinite;
+}
+.deco1 {
+  width: 90px;
+  color: #2563eb;
+  top: 8%;
+  right: 5%;
+  animation-delay: 0s;
+  animation-duration: 9s;
+}
+.deco2 {
+  width: 130px;
+  color: #7c3aed;
+  top: 22%;
+  left: 2%;
+  animation-delay: 2s;
+  animation-duration: 11s;
+}
+.deco3 {
+  width: 80px;
+  color: #0ea5e9;
+  top: 55%;
+  right: 3%;
+  animation-delay: 4s;
+  animation-duration: 13s;
+}
+.deco4 {
+  width: 85px;
+  color: #10b981;
+  bottom: 18%;
+  left: 3%;
+  animation-delay: 1s;
+  animation-duration: 10s;
+}
+.deco5 {
+  width: 100px;
+  color: #f59e0b;
+  bottom: 5%;
+  right: 6%;
+  animation-delay: 3s;
+  animation-duration: 12s;
+}
+@keyframes decoFloat {
+  0%, 100% { transform: translateY(0px) rotate(0deg);   }
+  33%       { transform: translateY(-14px) rotate(4deg); }
+  66%       { transform: translateY(8px) rotate(-3deg);  }
+}
+
+/* ── Header Illustration Strip ────────────────────────────── */
+.header-illustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 24px;
+  position: relative;
+}
+.illus {
+  width: 140px;
+  height: 100px;
+  object-fit: contain;
+  opacity: 0.88;
+  filter: drop-shadow(0 4px 18px rgba(37,99,235,0.35));
+  animation: illusFloat 6s ease-in-out infinite;
+  flex-shrink: 0;
+}
+.illus-left  { animation-delay: 0s; }
+.illus-right { animation-delay: 1.5s; }
+@keyframes illusFloat {
+  0%, 100% { transform: translateY(0px);   }
+  50%       { transform: translateY(-8px);  }
+}
+
+/* ── Centre Mic Animation ─────────────────────────────────── */
+.mic-anim {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mic-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(37, 99, 235, 0.5);
+  animation: micRingPulse 2.4s ease-out infinite;
+}
+.ring1 { width: 90px;  height: 90px;  animation-delay: 0s;    }
+.ring2 { width: 66px;  height: 66px;  animation-delay: 0.6s;  }
+.ring3 { width: 44px;  height: 44px;  animation-delay: 1.2s;  }
+@keyframes micRingPulse {
+  0%   { transform: scale(0.85); opacity: 0.8; }
+  100% { transform: scale(1.5);  opacity: 0;   }
+}
+.mic-core {
+  font-size: 30px;
+  position: relative;
+  z-index: 2;
+  animation: micBounce 2s ease-in-out infinite;
+}
+@keyframes micBounce {
+  0%, 100% { transform: scale(1);    }
+  50%       { transform: scale(1.15); }
+}
+
+/* ── Soundwave Bar ────────────────────────────────────────── */
+.soundwave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 20px;
+  height: 28px;
+}
+.soundwave span {
+  display: inline-block;
+  width: 4px;
+  background: linear-gradient(180deg, #2563eb, #7c3aed);
+  border-radius: 4px;
+  animation: waveBar 1.2s ease-in-out infinite;
+  opacity: 0.7;
+}
+.soundwave span:nth-child(1)  { animation-delay: 0.0s; height: 8px;  }
+.soundwave span:nth-child(2)  { animation-delay: 0.1s; height: 14px; }
+.soundwave span:nth-child(3)  { animation-delay: 0.2s; height: 20px; }
+.soundwave span:nth-child(4)  { animation-delay: 0.3s; height: 26px; }
+.soundwave span:nth-child(5)  { animation-delay: 0.4s; height: 18px; }
+.soundwave span:nth-child(6)  { animation-delay: 0.5s; height: 24px; }
+.soundwave span:nth-child(7)  { animation-delay: 0.6s; height: 28px; }
+.soundwave span:nth-child(8)  { animation-delay: 0.5s; height: 22px; }
+.soundwave span:nth-child(9)  { animation-delay: 0.4s; height: 16px; }
+.soundwave span:nth-child(10) { animation-delay: 0.3s; height: 26px; }
+.soundwave span:nth-child(11) { animation-delay: 0.2s; height: 20px; }
+.soundwave span:nth-child(12) { animation-delay: 0.1s; height: 14px; }
+.soundwave span:nth-child(13) { animation-delay: 0.0s; height: 10px; }
+.soundwave span:nth-child(14) { animation-delay: 0.1s; height: 18px; }
+.soundwave span:nth-child(15) { animation-delay: 0.2s; height: 8px;  }
+@keyframes waveBar {
+  0%, 100% { transform: scaleY(0.5); opacity: 0.5; }
+  50%       { transform: scaleY(1.0); opacity: 1.0; }
+}
