@@ -14,7 +14,12 @@ import traceback
 load_dotenv()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/*": {"origins": [
+    "https://jasneet5683.github.io",
+    "http://localhost:3000",
+    "http://127.0.0.1:5500"
+]}})
+
 
 # ── Load Whisper model once at startup ──────────────────────────────────────
 print("⏳ Loading Whisper small model...")
