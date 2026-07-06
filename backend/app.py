@@ -54,7 +54,18 @@ def transcribe():
     try:
         print(f"🎙️ Transcribing: {tmp_path}")
         # language=None → auto detect
-        result = model.transcribe(tmp_path, language=None)
+        #result = model.transcribe(tmp_path, language=None)
+        # ✅ Fixed — auto-detect BUT force correct settings for accuracy
+        result = model.transcribe(
+            tmp_path,
+            language=None,          # still auto-detects
+            task="transcribe",      # transcribe, don't translate
+            best_of=5,              # tries 5 candidates, picks best
+            beam_size=5,            # beam search for better accuracy
+            temperature=0.0,        # deterministic = more accurate
+            fp16=False              # safer for CPU-based Railway VM
+        )
+
         transcript = result["text"].strip()
         detected_lang = result.get("language", "unknown")
         print(f"✅ Transcription done. Language detected: {detected_lang}")
