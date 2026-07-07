@@ -1,4 +1,3 @@
-#const BACKEND = "https://web-production-b8ca4.up.railway.app";
 const BACKEND = "http://129.151.145.84:5000";
 
 let mediaRecorder  = null;
