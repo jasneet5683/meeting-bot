@@ -1,4 +1,4 @@
-const BACKEND = "https://applied-athletes-heath-exp.trycloudflare.com";
+const BACKEND = "https://api.jasneet.uk";
 
 let mediaRecorder  = null;
 let audioChunks    = [];
