@@ -1,4 +1,4 @@
-const BACKEND = "http://129.151.145.84:5000";
+const BACKEND = "https://applied-athletes-heath-exp.trycloudflare.com";
 
 let mediaRecorder  = null;
 let audioChunks    = [];
